@@ -19,7 +19,6 @@ export const metadata: Metadata = {
   title: "ACM SIGKDD Recruitments 2025 - Ride into the Future",
   description:
     "Join ACM SIGKDD and explore new territories in data science, machine learning, and innovation. Recruitments now open!",
-  generator: "v0.app",
 }
 
 export default function RootLayout({

@@ -1,8 +1,8 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect } from "react"
+import localFont from "next/font/local"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -10,6 +10,12 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
+
+// Load rdrf.ttf from app/fonts/rdrf.ttf (path is relative to this file)
+const rdrf = localFont({
+  src: "./fonts/rdrf.ttf",
+  display: "swap",
+})
 
 export default function RecruitmentPage() {
   const [isScrolled, setIsScrolled] = useState(false)
@@ -53,7 +59,6 @@ export default function RecruitmentPage() {
         }`}
       >
         
-
           
       </nav>
 
@@ -62,21 +67,24 @@ export default function RecruitmentPage() {
         id="home"
         className="relative h-screen flex items-center justify-center parallax-bg"
         style={{
-          backgroundImage: `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://www.chromethemer.com/download/hd-wallpapers/red-dead-redemption-7680x4320.jpg')`,
+              backgroundImage: `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://www.chromethemer.com/download/hd-wallpapers/red-dead-redemption-7680x4320.jpg')`,
+
         }}
       >
         <div className="text-center text-white animate-fade-in-up">
           <h1 className="text-6xl md:text-8xl font-bold mb-6 font-space-grotesk text-shadow-western"></h1>
           <h2 className="text-4xl md:text-6xl font-bold mb-4 text-primary font-space-grotesk text-shadow-western">
-            RECRUITMENTS 2025
+            <span className={rdrf.className}>RECRUITMENTS 2025</span>
           </h2>
-          <p className="text-xl md:text-2xl mb-8 font-dm-sans text-shadow-western">Ride into the Future With Us</p>
+          <p className="text-xl md:text-2xl mb-8 font-dm-sans text-shadow-western">
+            <span className={rdrf.className}>Ride into the Future With Us</span>
+          </p>
           <Button
             onClick={scrollToForm}
             className="text-lg px-8 py-4 animate-glow hover:scale-105 transition-transform font-space-grotesk"
             size="lg"
           >
-            Apply Now
+            <span className={rdrf.className}>Apply Now</span>
           </Button>
         </div>
       </section>
