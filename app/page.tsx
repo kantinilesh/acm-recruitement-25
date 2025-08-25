@@ -130,31 +130,35 @@ export default function RecruitmentPage() {
       </nav>
 
       {/* Hero Section */}
-      <section
-        id="home"
-        className="relative h-screen flex items-center justify-center parallax-bg"
-        style={{
-              backgroundImage: `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('/red-dead-redemption-7680x4320.jpg')`,
+<section
+  id="home"
+  className="relative min-h-[100svh] flex items-center justify-center"
+  style={{
+    backgroundImage: `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('/red-dead-redemption-7680x4320.jpg')`,
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+    backgroundRepeat: "no-repeat",
+    backgroundAttachment: "scroll", // prevent iOS Safari bug
+  }}
+>
+  <div className="text-center text-white animate-fade-in-up">
+    <h1 className="text-6xl md:text-8xl font-bold mb-6 font-space-grotesk text-shadow-western"></h1>
+    <h2 className="text-4xl md:text-6xl font-bold mb-4 text-primary font-space-grotesk text-shadow-western">
+      RECRUITMENTS 2025
+    </h2>
+    <p className="text-xl md:text-2xl mb-8 font-dm-sans text-shadow-western">
+      Ride into the Future With Us
+    </p>
+    <Button
+      onClick={scrollToForm}
+      className="text-lg px-8 py-4 animate-glow hover:scale-105 transition-transform font-space-grotesk"
+      size="lg"
+    >
+      Apply Now
+    </Button>
+  </div>
+</section>
 
-        }}
-      >
-        <div className="text-center text-white animate-fade-in-up">
-          <h1 className="text-6xl md:text-8xl font-bold mb-6 font-space-grotesk text-shadow-western"></h1>
-          <h2 className="text-4xl md:text-6xl font-bold mb-4 text-primary font-space-grotesk text-shadow-western">
-            RECRUITMENTS 2025
-          </h2>
-          <p className="text-xl md:text-2xl mb-8 font-dm-sans text-shadow-western">
-            Ride into the Future With Us
-          </p>
-          <Button
-            onClick={scrollToForm}
-            className="text-lg px-8 py-4 animate-glow hover:scale-105 transition-transform font-space-grotesk"
-            size="lg"
-          >
-            Apply Now
-          </Button>
-        </div>
-      </section>
 
       {/* Domains Section */}
       <section id="domains" className="py-20 bg-background">
