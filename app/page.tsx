@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
+import { createClient } from '@supabase/supabase-js'
 
 // Load rdrf.ttf from app/fonts/rdrf.ttf (path is relative to this file)
 const rdrf = localFont({
@@ -17,16 +18,30 @@ const rdrf = localFont({
   display: "swap",
 })
 
+// Initialize Supabase client
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
+
 export default function RecruitmentPage() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [showForm, setShowForm] = useState(false)
   const [showConfirmation, setShowConfirmation] = useState(false)
+  const [showError, setShowError] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
     name: "",
-    email: "",
-    phone: "",
-    domain: "",
-    reason: "",
+    registration_number: "",
+    srm_email: "",
+    personal_email: "",
+    contact_number: "",
+    year: "",
+    department: "",
+    section: "",
+    faculty_advisor_name: "",
+    faculty_advisor_contact: "",
+    interested_domain: "",
   })
 
   useEffect(() => {
@@ -37,10 +52,56 @@ export default function RecruitmentPage() {
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setShowConfirmation(true)
-    setShowForm(false)
+    setIsSubmitting(true)
+    setShowError(false)
+
+    try {
+      const { data, error } = await supabase
+        .from('reg25')
+        .insert([
+          {
+            name: formData.name,
+            registration_number: formData.registration_number,
+            srm_email: formData.srm_email,
+            personal_email: formData.personal_email,
+            contact_number: formData.contact_number,
+            year: formData.year,
+            department: formData.department,
+            section: formData.section,
+            faculty_advisor_name: formData.faculty_advisor_name,
+            faculty_advisor_contact: formData.faculty_advisor_contact,
+            interested_domain: formData.interested_domain,
+          }
+        ])
+
+      if (error) {
+        console.error('Error inserting data:', error)
+        setShowError(true)
+      } else {
+        setShowConfirmation(true)
+        // Reset form data
+        setFormData({
+          name: "",
+          registration_number: "",
+          srm_email: "",
+          personal_email: "",
+          contact_number: "",
+          year: "",
+          department: "",
+          section: "",
+          faculty_advisor_name: "",
+          faculty_advisor_contact: "",
+          interested_domain: "",
+        })
+      }
+    } catch (error) {
+      console.error('Unexpected error:', error)
+      setShowError(true)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const scrollToForm = () => {
@@ -48,6 +109,12 @@ export default function RecruitmentPage() {
     setTimeout(() => {
       document.getElementById("apply-section")?.scrollIntoView({ behavior: "smooth" })
     }, 100)
+  }
+
+  const resetForm = () => {
+    setShowConfirmation(false)
+    setShowError(false)
+    setShowForm(false)
   }
 
   return (
@@ -186,21 +253,54 @@ export default function RecruitmentPage() {
         </div>
       </section>
 
-      {/* Apply Section */}
+     {/* Apply Section */}
 {showForm && (
   <section id="apply-section" className="py-20 bg-muted/50">
     <div className="container mx-auto px-4 max-w-2xl">
       <Card className="western-border bg-card/95 backdrop-blur-sm animate-fade-in-up">
-        <CardHeader className="text-center">
-          <CardTitle className="text-4xl font-space-grotesk text-primary mb-4">
-            Join the Ride – Apply Now
-          </CardTitle>
-          <CardDescription className="text-lg font-dm-sans">
-            Ready to embark on your journey with ACM SIGKDD? Fill out the form below, partner.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
+        {showConfirmation ? (
+          <CardHeader className="text-center">
+            <CardTitle className="text-4xl font-space-grotesk text-primary mb-4">
+              🎉 Thank You for Applying!
+            </CardTitle>
+            <CardDescription className="text-lg font-dm-sans mb-6">
+              We've received your application. Our team will review it and get back to you soon.
+            </CardDescription>
+            <Button
+              onClick={resetForm}
+              className="text-lg px-8 py-4 font-space-grotesk"
+            >
+              Submit Another Application
+            </Button>
+          </CardHeader>
+        ) : showError ? (
+          <CardHeader className="text-center">
+            <CardTitle className="text-4xl font-space-grotesk text-red-600 mb-4">
+              ⚠️ Error Occurred
+            </CardTitle>
+            <CardDescription className="text-lg font-dm-sans mb-6">
+              Error occurred. Please try again later.
+            </CardDescription>
+            <Button
+              onClick={() => setShowError(false)}
+              className="text-lg px-8 py-4 font-space-grotesk"
+            >
+              Try Again
+            </Button>
+          </CardHeader>
+        ) : (
+          <>
+            <CardHeader className="text-center">
+              <CardTitle className="text-4xl font-space-grotesk text-primary mb-4">
+                Join the Ride – Apply Now
+              </CardTitle>
+              <CardDescription className="text-lg font-dm-sans">
+                Ready to embark on your journey with ACM SIGKDD? Fill out the form below, partner.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-6">
+
             
             {/* Full Name */}
             <div>
@@ -210,6 +310,7 @@ export default function RecruitmentPage() {
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 required
+                disabled={isSubmitting}
                 className="mt-2"
               />
             </div>
@@ -222,6 +323,7 @@ export default function RecruitmentPage() {
                 value={formData.registration_number}
                 onChange={(e) => setFormData({ ...formData, registration_number: e.target.value })}
                 required
+                disabled={isSubmitting}
                 className="mt-2"
               />
             </div>
@@ -235,6 +337,7 @@ export default function RecruitmentPage() {
                 value={formData.srm_email}
                 onChange={(e) => setFormData({ ...formData, srm_email: e.target.value })}
                 required
+                disabled={isSubmitting}
                 className="mt-2"
               />
             </div>
@@ -248,6 +351,7 @@ export default function RecruitmentPage() {
                 value={formData.personal_email}
                 onChange={(e) => setFormData({ ...formData, personal_email: e.target.value })}
                 required
+                disabled={isSubmitting}
                 className="mt-2"
               />
             </div>
@@ -260,6 +364,7 @@ export default function RecruitmentPage() {
                 value={formData.contact_number}
                 onChange={(e) => setFormData({ ...formData, contact_number: e.target.value })}
                 required
+                disabled={isSubmitting}
                 className="mt-2"
               />
             </div>
@@ -267,7 +372,11 @@ export default function RecruitmentPage() {
             {/* Year */}
             <div>
               <Label htmlFor="year" className="font-dm-sans">Year</Label>
-              <Select onValueChange={(value) => setFormData({ ...formData, year: value })}>
+              <Select 
+                onValueChange={(value) => setFormData({ ...formData, year: value })}
+                value={formData.year}
+                disabled={isSubmitting}
+              >
                 <SelectTrigger className="mt-2">
                   <SelectValue placeholder="Select Year" />
                 </SelectTrigger>
@@ -282,7 +391,11 @@ export default function RecruitmentPage() {
             {/* Department */}
             <div>
               <Label htmlFor="department" className="font-dm-sans">Department</Label>
-              <Select onValueChange={(value) => setFormData({ ...formData, department: value })}>
+              <Select 
+                onValueChange={(value) => setFormData({ ...formData, department: value })}
+                value={formData.department}
+                disabled={isSubmitting}
+              >
                 <SelectTrigger className="mt-2">
                   <SelectValue placeholder="Select Department" />
                 </SelectTrigger>
@@ -304,6 +417,7 @@ export default function RecruitmentPage() {
                 value={formData.section}
                 onChange={(e) => setFormData({ ...formData, section: e.target.value })}
                 required
+                disabled={isSubmitting}
                 className="mt-2"
               />
             </div>
@@ -316,6 +430,7 @@ export default function RecruitmentPage() {
                 value={formData.faculty_advisor_name}
                 onChange={(e) => setFormData({ ...formData, faculty_advisor_name: e.target.value })}
                 required
+                disabled={isSubmitting}
                 className="mt-2"
               />
             </div>
@@ -328,6 +443,7 @@ export default function RecruitmentPage() {
                 value={formData.faculty_advisor_contact}
                 onChange={(e) => setFormData({ ...formData, faculty_advisor_contact: e.target.value })}
                 required
+                disabled={isSubmitting}
                 className="mt-2"
               />
             </div>
@@ -335,7 +451,11 @@ export default function RecruitmentPage() {
             {/* Interested Domain */}
             <div>
               <Label htmlFor="interested_domain" className="font-dm-sans">Interested Domain</Label>
-              <Select onValueChange={(value) => setFormData({ ...formData, interested_domain: value })}>
+              <Select 
+                onValueChange={(value) => setFormData({ ...formData, interested_domain: value })}
+                value={formData.interested_domain}
+                disabled={isSubmitting}
+              >
                 <SelectTrigger className="mt-2">
                   <SelectValue placeholder="Choose your path" />
                 </SelectTrigger>
@@ -349,11 +469,17 @@ export default function RecruitmentPage() {
             </div>
 
             {/* Submit */}
-            <Button type="submit" className="w-full text-lg py-6 font-space-grotesk animate-glow">
-              Submit Application
+            <Button 
+              type="submit" 
+              className="w-full text-lg py-6 font-space-grotesk animate-glow"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Submitting..." : "Submit Application"}
             </Button>
-          </form>
-        </CardContent>
+              </form>
+            </CardContent>
+          </>
+        )}
       </Card>
     </div>
   </section>
