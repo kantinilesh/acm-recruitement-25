@@ -134,7 +134,7 @@ export default function RecruitmentPage() {
         id="home"
         className="relative h-screen flex items-center justify-center parallax-bg"
         style={{
-              backgroundImage: `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://www.chromethemer.com/download/hd-wallpapers/red-dead-redemption-7680x4320.jpg')`,
+              backgroundImage: `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('/red-dead-redemption-7680x4320.jpg')`,
 
         }}
       >
