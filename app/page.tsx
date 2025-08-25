@@ -74,17 +74,17 @@ export default function RecruitmentPage() {
         <div className="text-center text-white animate-fade-in-up">
           <h1 className="text-6xl md:text-8xl font-bold mb-6 font-space-grotesk text-shadow-western"></h1>
           <h2 className="text-4xl md:text-6xl font-bold mb-4 text-primary font-space-grotesk text-shadow-western">
-            <span className={rdrf.className}>RECRUITMENTS 2025</span>
+            RECRUITMENTS 2025
           </h2>
           <p className="text-xl md:text-2xl mb-8 font-dm-sans text-shadow-western">
-            <span className={rdrf.className}>Ride into the Future With Us</span>
+            Ride into the Future With Us
           </p>
           <Button
             onClick={scrollToForm}
             className="text-lg px-8 py-4 animate-glow hover:scale-105 transition-transform font-space-grotesk"
             size="lg"
           >
-            <span className={rdrf.className}>Apply Now</span>
+            Apply Now
           </Button>
         </div>
       </section>
