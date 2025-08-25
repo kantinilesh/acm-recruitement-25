@@ -1,0 +1,205 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* Updated color tokens to match Red Dead Redemption western theme */
+  --background: #fefce8; /* Light beige for overall background */
+  --foreground: #4b5563; /* Dark gray for text */
+  --card: #ffffff; /* White for cards */
+  --card-foreground: #4b5563; /* Dark gray for card text */
+  --popover: #ffffff; /* White for popovers */
+  --popover-foreground: #4b5563; /* Dark gray for popover text */
+  --primary: #a16207; /* Yellow-brown for primary elements */
+  --primary-foreground: #ffffff; /* White text on primary elements */
+  --secondary: #164e63; /* Cyan for secondary elements */
+  --secondary-foreground: #ffffff; /* White text on secondary elements */
+  --muted: #fefce8; /* Light beige for muted elements */
+  --muted-foreground: #4b5563; /* Dark gray for muted text */
+  --accent: #164e63; /* Cyan for accent elements */
+  --accent-foreground: #ffffff; /* White text on accent elements */
+  --destructive: #e53e3e; /* Red for errors or alerts */
+  --destructive-foreground: #ffffff; /* White on destructive elements */
+  --border: #4b5563; /* Dark gray for borders */
+  --input: #ffffff; /* White for input fields */
+  --ring: rgba(22, 78, 99, 0.5); /* Soft cyan for focus rings */
+  --chart-1: #a16207; /* Yellow for chart accents */
+  --chart-2: #059669; /* Emerald for additional chart elements */
+  --chart-3: #164e63; /* Cyan for further chart elements */
+  --chart-4: #4b5563; /* Dark gray for neutral chart elements */
+  --chart-5: #e53e3e; /* Red for alerting chart elements */
+  --radius: 0.5rem; /* Slight rounding for cards and buttons */
+  --sidebar: #fefce8; /* Light beige for sidebar background */
+  --sidebar-foreground: #4b5563; /* Dark gray for sidebar text */
+  --sidebar-primary: #a16207; /* Yellow for primary sidebar elements */
+  --sidebar-primary-foreground: #ffffff; /* White for primary sidebar text */
+  --sidebar-accent: #164e63; /* Cyan for sidebar accents */
+  --sidebar-accent-foreground: #ffffff; /* White for sidebar accent text */
+  --sidebar-border: #4b5563; /* Dark gray for sidebar borders */
+  --sidebar-ring: rgba(22, 78, 99, 0.5); /* Soft cyan for sidebar focus rings */
+}
+
+.dark {
+  /* Updated dark mode colors to maintain western theme */
+  --background: #1c1917; /* Dark brown for dark mode background */
+  --foreground: #fefce8; /* Light beige for dark mode text */
+  --card: #292524; /* Dark brown for dark mode cards */
+  --card-foreground: #fefce8; /* Light beige for dark mode card text */
+  --popover: #292524; /* Dark brown for dark mode popovers */
+  --popover-foreground: #fefce8; /* Light beige for dark mode popover text */
+  --primary: #d97706; /* Brighter yellow for dark mode primary */
+  --primary-foreground: #1c1917; /* Dark brown text on primary elements */
+  --secondary: #0891b2; /* Brighter cyan for dark mode secondary */
+  --secondary-foreground: #1c1917; /* Dark brown text on secondary elements */
+  --muted: #292524; /* Dark brown for dark mode muted elements */
+  --muted-foreground: #a8a29e; /* Light gray for dark mode muted text */
+  --accent: #0891b2; /* Brighter cyan for dark mode accent */
+  --accent-foreground: #1c1917; /* Dark brown text on accent elements */
+  --destructive: #dc2626; /* Red for dark mode errors */
+  --destructive-foreground: #fefce8; /* Light beige on destructive elements */
+  --border: #44403c; /* Medium brown for dark mode borders */
+  --input: #292524; /* Dark brown for dark mode input fields */
+  --ring: rgba(8, 145, 178, 0.5); /* Soft cyan for dark mode focus rings */
+  --chart-1: #d97706; /* Brighter yellow for dark mode charts */
+  --chart-2: #10b981; /* Brighter emerald for dark mode charts */
+  --chart-3: #0891b2; /* Brighter cyan for dark mode charts */
+  --chart-4: #a8a29e; /* Light gray for dark mode neutral charts */
+  --chart-5: #dc2626; /* Red for dark mode alerting charts */
+  --sidebar: #1c1917; /* Dark brown for dark mode sidebar */
+  --sidebar-foreground: #fefce8; /* Light beige for dark mode sidebar text */
+  --sidebar-primary: #d97706; /* Brighter yellow for dark mode sidebar primary */
+  --sidebar-primary-foreground: #1c1917; /* Dark brown for dark mode sidebar primary text */
+  --sidebar-accent: #0891b2; /* Brighter cyan for dark mode sidebar accent */
+  --sidebar-accent-foreground: #1c1917; /* Dark brown for dark mode sidebar accent text */
+  --sidebar-border: #44403c; /* Medium brown for dark mode sidebar borders */
+  --sidebar-ring: rgba(8, 145, 178, 0.5); /* Soft cyan for dark mode sidebar focus rings */
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Added custom western-style animations and effects */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes glow {
+  0%,
+  100% {
+    box-shadow: 0 0 5px rgba(161, 98, 7, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(161, 98, 7, 0.8), 0 0 30px rgba(161, 98, 7, 0.6);
+  }
+}
+
+@keyframes dustParticles {
+  0% {
+    opacity: 0;
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-20px) rotate(360deg);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.8s ease-out;
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft 0.8s ease-out;
+}
+
+.animate-glow {
+  animation: glow 2s ease-in-out infinite;
+}
+
+.animate-dust {
+  animation: dustParticles 3s ease-in-out infinite;
+}
+
+/* Added parallax and scroll effects */
+.parallax-bg {
+  background-attachment: fixed;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.text-shadow-western {
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+}
+
+.western-border {
+  border: 3px solid #a16207;
+  border-image: linear-gradient(45deg, #a16207, #d97706) 1;
+}
