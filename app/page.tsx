@@ -187,131 +187,178 @@ export default function RecruitmentPage() {
       </section>
 
       {/* Apply Section */}
-      {showForm && (
-        <section id="apply-section" className="py-20 bg-muted/50">
-          <div className="container mx-auto px-4 max-w-2xl">
-            <Card className="western-border bg-card/95 backdrop-blur-sm animate-fade-in-up">
-              <CardHeader className="text-center">
-                <CardTitle className="text-4xl font-space-grotesk text-primary mb-4">
-                  Join the Ride – Apply Now
-                </CardTitle>
-                <CardDescription className="text-lg font-dm-sans">
-                  Ready to embark on your journey with ACM SIGKDD? Fill out the form below, partner.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div>
-                    <Label htmlFor="name" className="font-dm-sans">
-                      Full Name
-                    </Label>
-                    <Input
-                      id="name"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      required
-                      className="mt-2"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="email" className="font-dm-sans">
-                      Email
-                    </Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      required
-                      className="mt-2"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="phone" className="font-dm-sans">
-                      Phone Number
-                    </Label>
-                    <Input
-                      id="phone"
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      required
-                      className="mt-2"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="domain" className="font-dm-sans">
-                      Domain Preference
-                    </Label>
-                    <Select onValueChange={(value) => setFormData({ ...formData, domain: value })}>
-                      <SelectTrigger className="mt-2">
-                        <SelectValue placeholder="Choose your path" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="web-dev">Web App Development</SelectItem>
-                        <SelectItem value="research">Research & Development</SelectItem>
-                        <SelectItem value="corporate">Corporate</SelectItem>
-                        <SelectItem value="creatives">Creatives</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="reason" className="font-dm-sans">
-                      Why do you want to join ACM SIGKDD?
-                    </Label>
-                    <Textarea
-                      id="reason"
-                      value={formData.reason}
-                      onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
-                      required
-                      className="mt-2 min-h-[100px]"
-                      placeholder="Tell us about your journey and aspirations..."
-                    />
-                  </div>
-
-                  <Button type="submit" className="w-full text-lg py-6 font-space-grotesk animate-glow">
-                    Submit Application
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-          </div>
-        </section>
-      )}
-
-      {/* Confirmation Section */}
-      {showConfirmation && (
-        <section className="py-20 bg-background">
-          <div className="container mx-auto px-4 text-center">
-            <div className="animate-fade-in-up">
-              <h2 className="text-5xl font-bold mb-6 font-space-grotesk text-primary">Your Journey Begins Here!</h2>
-              <p className="text-xl mb-8 font-dm-sans max-w-2xl mx-auto">
-                Thank you for applying to ACM SIGKDD Recruitments 2025. We'll get back to you soon, partner 🤠
-              </p>
-              <div className="w-64 h-64 mx-auto mb-8">
-                <img
-                  src="/cowboy-riding-into-sunset-representing-new-journey.png"
-                  alt="Journey Begins"
-                  className="w-full h-full object-cover rounded-full animate-dust"
-                />
-              </div>
-              <Button
-                onClick={() => {
-                  setShowConfirmation(false)
-                  setShowForm(false)
-                }}
-                variant="outline"
-                className="font-space-grotesk"
-              >
-                Back to Home
-              </Button>
+{showForm && (
+  <section id="apply-section" className="py-20 bg-muted/50">
+    <div className="container mx-auto px-4 max-w-2xl">
+      <Card className="western-border bg-card/95 backdrop-blur-sm animate-fade-in-up">
+        <CardHeader className="text-center">
+          <CardTitle className="text-4xl font-space-grotesk text-primary mb-4">
+            Join the Ride – Apply Now
+          </CardTitle>
+          <CardDescription className="text-lg font-dm-sans">
+            Ready to embark on your journey with ACM SIGKDD? Fill out the form below, partner.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            
+            {/* Full Name */}
+            <div>
+              <Label htmlFor="name" className="font-dm-sans">Full Name</Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                required
+                className="mt-2"
+              />
             </div>
-          </div>
-        </section>
-      )}
+
+            {/* Registration Number */}
+            <div>
+              <Label htmlFor="registration_number" className="font-dm-sans">Registration Number</Label>
+              <Input
+                id="registration_number"
+                value={formData.registration_number}
+                onChange={(e) => setFormData({ ...formData, registration_number: e.target.value })}
+                required
+                className="mt-2"
+              />
+            </div>
+
+            {/* SRM Email */}
+            <div>
+              <Label htmlFor="srm_email" className="font-dm-sans">SRM Email ID</Label>
+              <Input
+                id="srm_email"
+                type="email"
+                value={formData.srm_email}
+                onChange={(e) => setFormData({ ...formData, srm_email: e.target.value })}
+                required
+                className="mt-2"
+              />
+            </div>
+
+            {/* Personal Email */}
+            <div>
+              <Label htmlFor="personal_email" className="font-dm-sans">Personal Email ID</Label>
+              <Input
+                id="personal_email"
+                type="email"
+                value={formData.personal_email}
+                onChange={(e) => setFormData({ ...formData, personal_email: e.target.value })}
+                required
+                className="mt-2"
+              />
+            </div>
+
+            {/* Contact Number */}
+            <div>
+              <Label htmlFor="contact_number" className="font-dm-sans">Contact Number</Label>
+              <Input
+                id="contact_number"
+                value={formData.contact_number}
+                onChange={(e) => setFormData({ ...formData, contact_number: e.target.value })}
+                required
+                className="mt-2"
+              />
+            </div>
+
+            {/* Year */}
+            <div>
+              <Label htmlFor="year" className="font-dm-sans">Year</Label>
+              <Select onValueChange={(value) => setFormData({ ...formData, year: value })}>
+                <SelectTrigger className="mt-2">
+                  <SelectValue placeholder="Select Year" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="I">I</SelectItem>
+                  <SelectItem value="II">II</SelectItem>
+                  <SelectItem value="III">III</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Department */}
+            <div>
+              <Label htmlFor="department" className="font-dm-sans">Department</Label>
+              <Select onValueChange={(value) => setFormData({ ...formData, department: value })}>
+                <SelectTrigger className="mt-2">
+                  <SelectValue placeholder="Select Department" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="DSBS">DSBS</SelectItem>
+                  <SelectItem value="NWC">NWC</SelectItem>
+                  <SelectItem value="CINTEL">CINTEL</SelectItem>
+                  <SelectItem value="CTech">CTech</SelectItem>
+                  <SelectItem value="Other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Section */}
+            <div>
+              <Label htmlFor="section" className="font-dm-sans">Section</Label>
+              <Input
+                id="section"
+                value={formData.section}
+                onChange={(e) => setFormData({ ...formData, section: e.target.value })}
+                required
+                className="mt-2"
+              />
+            </div>
+
+            {/* Faculty Advisor Name */}
+            <div>
+              <Label htmlFor="faculty_advisor_name" className="font-dm-sans">Faculty Advisor Name</Label>
+              <Input
+                id="faculty_advisor_name"
+                value={formData.faculty_advisor_name}
+                onChange={(e) => setFormData({ ...formData, faculty_advisor_name: e.target.value })}
+                required
+                className="mt-2"
+              />
+            </div>
+
+            {/* Faculty Advisor Contact */}
+            <div>
+              <Label htmlFor="faculty_advisor_contact" className="font-dm-sans">Faculty Advisor Contact</Label>
+              <Input
+                id="faculty_advisor_contact"
+                value={formData.faculty_advisor_contact}
+                onChange={(e) => setFormData({ ...formData, faculty_advisor_contact: e.target.value })}
+                required
+                className="mt-2"
+              />
+            </div>
+
+            {/* Interested Domain */}
+            <div>
+              <Label htmlFor="interested_domain" className="font-dm-sans">Interested Domain</Label>
+              <Select onValueChange={(value) => setFormData({ ...formData, interested_domain: value })}>
+                <SelectTrigger className="mt-2">
+                  <SelectValue placeholder="Choose your path" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Corporate">Corporate</SelectItem>
+                  <SelectItem value="Research and Development">Research and Development</SelectItem>
+                  <SelectItem value="Web/App Dev">Web/App Dev</SelectItem>
+                  <SelectItem value="Creatives">Creatives</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Submit */}
+            <Button type="submit" className="w-full text-lg py-6 font-space-grotesk animate-glow">
+              Submit Application
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
+  </section>
+)}
+
 
       {/* Footer */}
       <footer className="bg-stone-900 text-white py-12">
