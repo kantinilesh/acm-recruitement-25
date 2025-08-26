@@ -35,7 +35,7 @@ export default function RecruitmentPage() {
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   
   const [timeLeft, setTimeLeft] = useState({
-    days: 10,
+    days: 0,
     hours: 0,
     minutes: 0,
     seconds: 0,
@@ -75,8 +75,7 @@ export default function RecruitmentPage() {
 
   // Enhanced timer countdown with mobile optimization
   useEffect(() => {
-    const targetDate = new Date()
-    targetDate.setDate(targetDate.getDate() + 10)
+    const targetDate = new Date('2025-09-04T23:59:59')
     
     const updateTimer = () => {
       try {
@@ -95,10 +94,10 @@ export default function RecruitmentPage() {
             minutes,
             seconds,
             // Trigger flip animation when values change
-            daysChanged: prev.days !== days && prev.days !== 10, // Don't animate on initial load
-            hoursChanged: prev.hours !== hours && prev.days !== 10,
-            minutesChanged: prev.minutes !== minutes && prev.days !== 10,
-            secondsChanged: prev.seconds !== seconds && prev.days !== 10,
+            daysChanged: prev.days !== days && prev.days !== 0, // Don't animate on initial load
+            hoursChanged: prev.hours !== hours && prev.days !== 0,
+            minutesChanged: prev.minutes !== minutes && prev.days !== 0,
+            secondsChanged: prev.seconds !== seconds && prev.days !== 0,
           }))
         } else {
           setTimeLeft({ 
