@@ -141,62 +141,47 @@ export default function RecruitmentPage() {
     return () => timeouts.forEach(timeout => clearTimeout(timeout))
   }, [])
 
-  // Enhanced audio handling for mobile
+  // Auto-enable audio for all devices
   useEffect(() => {
-    // Don't auto-play audio on mobile devices due to restrictions
-    if (isMobile) {
-      return
-    }
-
     try {
       const audio = new Audio('/sound1.mp3')
       audioRef.current = audio
       audio.loop = true
       audio.volume = 0.3
-      audio.preload = 'metadata'
+      audio.preload = 'auto'
       
-      // For desktop, try to play muted initially
-      audio.muted = true
-      const playPromise = audio.play()
-      
-      if (playPromise !== undefined) {
-        playPromise.catch(error => {
-          console.log('Auto-play prevented:', error)
-          setShowAudioPrompt(true)
+      const enableAudio = () => {
+        audio.muted = false
+        audio.play().catch(error => {
+          console.log('Audio playback failed:', error)
         })
-      }
-
-      const handleFirstInteraction = () => {
-        if (audio.muted) {
-          audio.muted = false
-          audio.play().catch(error => {
-            console.error('Audio playback failed after interaction:', error)
-            setShowAudioPrompt(true)
-          })
-        }
         // Remove listeners after first interaction
-        window.removeEventListener('click', handleFirstInteraction)
-        window.removeEventListener('touchstart', handleFirstInteraction)
-        window.removeEventListener('scroll', handleFirstInteraction)
+        window.removeEventListener('click', enableAudio)
+        window.removeEventListener('touchstart', enableAudio)
+        window.removeEventListener('scroll', enableAudio)
       }
 
-      window.addEventListener('click', handleFirstInteraction, { passive: true })
-      window.addEventListener('touchstart', handleFirstInteraction, { passive: true })
-      window.addEventListener('scroll', handleFirstInteraction, { passive: true })
+      // Try to play immediately
+      audio.play().catch(() => {
+        // If auto-play fails, enable on first user interaction
+        window.addEventListener('click', enableAudio, { passive: true })
+        window.addEventListener('touchstart', enableAudio, { passive: true })
+        window.addEventListener('scroll', enableAudio, { passive: true })
+      })
 
       return () => {
         if (audio) {
           audio.pause()
           audio.currentTime = 0
         }
-        window.removeEventListener('click', handleFirstInteraction)
-        window.removeEventListener('touchstart', handleFirstInteraction)
-        window.removeEventListener('scroll', handleFirstInteraction)
+        window.removeEventListener('click', enableAudio)
+        window.removeEventListener('touchstart', enableAudio)
+        window.removeEventListener('scroll', enableAudio)
       }
     } catch (error) {
       console.error('Audio setup error:', error)
     }
-  }, [isMobile])
+  }, [])
 
   // Smooth scroll with mobile optimization
   useEffect(() => {
@@ -580,14 +565,15 @@ export default function RecruitmentPage() {
             isScrolled ? "bg-stone-900/95 backdrop-blur-sm shadow-lg" : "bg-transparent"
           }`}
         >
-          <div className="container mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
-            <a href="#home" className="text-2xl sm:text-3xl font-bold text-primary font-space-grotesk">ACM SIGKDD</a>
-            <div className="hidden sm:flex space-x-6">
-              <a href="#home" className="text-white hover:text-primary transition-colors font-dm-sans">Home</a>
-              <a href="#domains" className="text-white hover:text-primary transition-colors font-dm-sans">Domains</a>
-              <a href="#apply-section" onClick={scrollToForm} className="text-white hover:text-primary transition-colors font-dm-sans">Apply</a>
+          <div className="container mx-auto px-2 sm:px-6 py-3 sm:py-4 flex justify-between items-center">
+            <a href="#home" className="text-lg sm:text-2xl md:text-3xl font-bold text-primary font-space-grotesk">ACM SIGKDD</a>
+            
+            {/* Navigation visible on all screen sizes */}
+            <div className="flex space-x-3 sm:space-x-6 items-center">
+              <a href="#home" className="text-white hover:text-primary transition-colors font-dm-sans text-sm sm:text-base">Home</a>
+              <a href="#domains" className="text-white hover:text-primary transition-colors font-dm-sans text-sm sm:text-base">Domains</a>
+              <a href="#apply-section" onClick={scrollToForm} className="text-white hover:text-primary transition-colors font-dm-sans cursor-pointer text-sm sm:text-base">Apply</a>
             </div>
-            {/* Mobile menu button could go here */}
           </div>
         </nav>
 
@@ -597,16 +583,6 @@ export default function RecruitmentPage() {
           className="hero-background relative flex items-center justify-center"
         >
           <div className="text-center text-white py-20 px-4">
-            {showAudioPrompt && !isMobile && (
-              <div className="absolute top-4 right-4 z-50 animate-fade-in-up">
-                <Button
-                  onClick={handleAudioEnable}
-                  className="text-sm px-4 sm:px-6 py-2 sm:py-3 bg-primary/90 hover:bg-primary animate-glow rounded-lg touch-target"
-                >
-                  Enable Audio
-                </Button>
-              </div>
-            )}
             
             {/* RECRUITMENTS and 2025 animation */}
             <div className="flex flex-col items-center mb-6 sm:mb-8">
