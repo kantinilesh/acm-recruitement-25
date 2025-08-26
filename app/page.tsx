@@ -1,7 +1,6 @@
 "use client"
-
 import type React from "react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import localFont from "next/font/local"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -31,6 +30,21 @@ export default function RecruitmentPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showAudioPrompt, setShowAudioPrompt] = useState(false)
   const [animationPhase, setAnimationPhase] = useState(0)
+  const [isMobile, setIsMobile] = useState(false)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const timerRef = useRef<NodeJS.Timeout | null>(null)
+  
+  const [timeLeft, setTimeLeft] = useState({
+    days: 10,
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+    daysChanged: false,
+    hoursChanged: false,
+    minutesChanged: false,
+    secondsChanged: false
+  })
+  
   const [formData, setFormData] = useState({
     name: "",
     registration_number: "",
@@ -45,80 +59,160 @@ export default function RecruitmentPage() {
     interested_domain: "",
   })
 
-  // Animation sequence
+  // Detect mobile device
+  useEffect(() => {
+    const checkMobile = () => {
+      const userAgent = navigator.userAgent.toLowerCase()
+      const isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/.test(userAgent)
+      const isSmallScreen = window.innerWidth <= 768
+      setIsMobile(isMobileDevice || isSmallScreen)
+    }
+    
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  // Enhanced timer countdown with mobile optimization
+  useEffect(() => {
+    const targetDate = new Date()
+    targetDate.setDate(targetDate.getDate() + 10)
+    
+    const updateTimer = () => {
+      try {
+        const now = new Date().getTime()
+        const distance = targetDate.getTime() - now
+        
+        if (distance > 0) {
+          const days = Math.floor(distance / (1000 * 60 * 60 * 24))
+          const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+          const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60))
+          const seconds = Math.floor((distance % (1000 * 60)) / 1000)
+          
+          setTimeLeft(prev => ({
+            days,
+            hours,
+            minutes,
+            seconds,
+            // Trigger flip animation when values change
+            daysChanged: prev.days !== days && prev.days !== 10, // Don't animate on initial load
+            hoursChanged: prev.hours !== hours && prev.days !== 10,
+            minutesChanged: prev.minutes !== minutes && prev.days !== 10,
+            secondsChanged: prev.seconds !== seconds && prev.days !== 10,
+          }))
+        } else {
+          setTimeLeft({ 
+            days: 0, 
+            hours: 0, 
+            minutes: 0, 
+            seconds: 0,
+            daysChanged: false,
+            hoursChanged: false,
+            minutesChanged: false,
+            secondsChanged: false
+          })
+        }
+      } catch (error) {
+        console.error('Timer update error:', error)
+      }
+    }
+
+    // Initial update
+    updateTimer()
+    
+    // Set up interval with error handling
+    timerRef.current = setInterval(updateTimer, 1000)
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+      }
+    }
+  }, [])
+
+  // Animation sequence for RECRUITMENTS and 2025
   useEffect(() => {
     const timeouts: NodeJS.Timeout[] = []
     
-    // Phase 1: RECRUITMENTS
+    // Phase 1: RECRUITMENTS and 2025
     timeouts.push(setTimeout(() => setAnimationPhase(1), 500))
-    // Phase 2: 2024 appears
-    timeouts.push(setTimeout(() => setAnimationPhase(2), 1700))
-    // Phase 3: 2024 disappears, 2025 appears
-    timeouts.push(setTimeout(() => setAnimationPhase(3), 3200))
-    // Phase 4: Tagline and button
-    timeouts.push(setTimeout(() => setAnimationPhase(4), 4200))
+    // Phase 2: Timer and button
+    timeouts.push(setTimeout(() => setAnimationPhase(2), 2500))
     
     return () => timeouts.forEach(timeout => clearTimeout(timeout))
   }, [])
 
-  // Audio handling
+  // Enhanced audio handling for mobile
   useEffect(() => {
-    const audio = new Audio('/western-theme.mp3')
-    audio.loop = true
-    audio.volume = 0.3
-    audio.muted = true // Start muted to allow auto-play
-    
-    // Try to play immediately
-    const playAttempt = audio.play().catch(error => {
-      console.error('Initial audio playback failed:', error)
-    })
-
-    const handleScroll = () => {
-      if (audio.muted && window.scrollY > 10) {
-        audio.muted = false
-        audio.play().catch(error => {
-          console.error('Audio playback failed on scroll:', error)
-          setShowAudioPrompt(true)
-        })
-        window.removeEventListener('scroll', handleScroll)
-      }
+    // Don't auto-play audio on mobile devices due to restrictions
+    if (isMobile) {
+      return
     }
 
-    const handleInteraction = () => {
-      if (audio.muted) {
-        audio.muted = false
-        audio.play().catch(error => {
-          console.error('Audio playback failed after interaction:', error)
+    try {
+      const audio = new Audio('/sound1.mp3')
+      audioRef.current = audio
+      audio.loop = true
+      audio.volume = 0.3
+      audio.preload = 'metadata'
+      
+      // For desktop, try to play muted initially
+      audio.muted = true
+      const playPromise = audio.play()
+      
+      if (playPromise !== undefined) {
+        playPromise.catch(error => {
+          console.log('Auto-play prevented:', error)
           setShowAudioPrompt(true)
         })
       }
-      window.removeEventListener('click', handleInteraction)
-      window.removeEventListener('touchstart', handleInteraction)
-      window.removeEventListener('mousemove', handleInteraction)
+
+      const handleFirstInteraction = () => {
+        if (audio.muted) {
+          audio.muted = false
+          audio.play().catch(error => {
+            console.error('Audio playback failed after interaction:', error)
+            setShowAudioPrompt(true)
+          })
+        }
+        // Remove listeners after first interaction
+        window.removeEventListener('click', handleFirstInteraction)
+        window.removeEventListener('touchstart', handleFirstInteraction)
+        window.removeEventListener('scroll', handleFirstInteraction)
+      }
+
+      window.addEventListener('click', handleFirstInteraction, { passive: true })
+      window.addEventListener('touchstart', handleFirstInteraction, { passive: true })
+      window.addEventListener('scroll', handleFirstInteraction, { passive: true })
+
+      return () => {
+        if (audio) {
+          audio.pause()
+          audio.currentTime = 0
+        }
+        window.removeEventListener('click', handleFirstInteraction)
+        window.removeEventListener('touchstart', handleFirstInteraction)
+        window.removeEventListener('scroll', handleFirstInteraction)
+      }
+    } catch (error) {
+      console.error('Audio setup error:', error)
     }
+  }, [isMobile])
 
-    window.addEventListener('scroll', handleScroll)
-    window.addEventListener('click', handleInteraction)
-    window.addEventListener('touchstart', handleInteraction)
-    window.addEventListener('mousemove', handleInteraction)
-
-    return () => {
-      audio.pause()
-      audio.currentTime = 0
-      window.removeEventListener('scroll', handleScroll)
-      window.removeEventListener('click', handleInteraction)
-      window.removeEventListener('touchstart', handleInteraction)
-      window.removeEventListener('mousemove', handleInteraction)
-    }
-  }, [])
-
-  // Smooth scroll
+  // Smooth scroll with mobile optimization
   useEffect(() => {
+    // Use CSS scroll-behavior for better performance on mobile
     document.documentElement.style.scrollBehavior = 'smooth'
+    
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50)
+      // Throttle scroll events for better performance
+      requestAnimationFrame(() => {
+        setIsScrolled(window.scrollY > 50)
+      })
     }
-    window.addEventListener("scroll", handleScroll)
+    
+    window.addEventListener("scroll", handleScroll, { passive: true })
+    
     return () => {
       window.removeEventListener("scroll", handleScroll)
       document.documentElement.style.scrollBehavior = 'auto'
@@ -179,7 +273,13 @@ export default function RecruitmentPage() {
   const scrollToForm = () => {
     setShowForm(true)
     setTimeout(() => {
-      document.getElementById("apply-section")?.scrollIntoView({ behavior: "smooth" })
+      const element = document.getElementById("apply-section")
+      if (element) {
+        element.scrollIntoView({ 
+          behavior: "smooth",
+          block: "start"
+        })
+      }
     }, 100)
   }
 
@@ -189,29 +289,42 @@ export default function RecruitmentPage() {
     setShowForm(false)
   }
 
+  const handleAudioEnable = () => {
+    setShowAudioPrompt(false)
+    try {
+      if (audioRef.current) {
+        audioRef.current.muted = false
+        audioRef.current.play().catch(error => console.error('Manual audio playback failed:', error))
+      } else {
+        const audio = new Audio('/sound1.mp3')
+        audioRef.current = audio
+        audio.loop = true
+        audio.volume = 0.3
+        audio.play().catch(error => console.error('Manual audio playback failed:', error))
+      }
+    } catch (error) {
+      console.error('Audio enable error:', error)
+    }
+  }
+
   return (
     <>
       <style jsx global>{`
         @keyframes letterDrop {
           from {
-            transform: translateY(50px);
+            transform: translateY(-100px) rotateX(90deg);
             opacity: 0;
           }
           to {
-            transform: translateY(0);
+            transform: translateY(0) rotateX(0deg);
             opacity: 1;
           }
         }
 
-        @keyframes particleDisintegrate {
-          from {
-            opacity: 1;
-            transform: scale(1) translate(0, 0);
-          }
-          to {
-            opacity: 0;
-            transform: scale(0.5) translate(var(--random-x), var(--random-y));
-          }
+        @keyframes flipCard {
+          0% { transform: rotateY(0deg); }
+          50% { transform: rotateY(180deg); }
+          100% { transform: rotateY(360deg); }
         }
 
         @keyframes fadeInUp {
@@ -236,20 +349,6 @@ export default function RecruitmentPage() {
           }
         }
 
-        @keyframes glow {
-          0%, 100% {
-            box-shadow: 0 0 20px rgba(234, 179, 8, 0.5);
-          }
-          50% {
-            box-shadow: 0 0 30px rgba(234, 179, 8, 0.8);
-          }
-        }
-
-        .animate-glow {
-          animation: glow 2s ease-in-out infinite;
-        }
-
-        /* iOS Background Fix */
         .hero-background {
           background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('/red-dead-redemption-7680x4320.jpg');
           background-size: cover;
@@ -257,9 +356,21 @@ export default function RecruitmentPage() {
           background-repeat: no-repeat;
           min-height: 100vh;
           min-height: 100svh;
+          background-attachment: fixed;
         }
 
-        /* Fix iOS viewport issues */
+        /* Mobile-specific background fixes */
+        @media screen and (max-width: 768px) {
+          .hero-background {
+            background-attachment: scroll !important;
+            background-size: cover;
+            background-position: center;
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
+          }
+        }
+
+        /* iOS Safari specific fixes */
         @supports (-webkit-touch-callout: none) {
           .hero-background {
             background-attachment: scroll !important;
@@ -269,7 +380,7 @@ export default function RecruitmentPage() {
           }
         }
 
-        /* Alternative iOS fix */
+        /* High DPI displays */
         @media screen and (-webkit-min-device-pixel-ratio: 2) {
           .hero-background {
             background-attachment: scroll;
@@ -287,12 +398,110 @@ export default function RecruitmentPage() {
         }
 
         .letter-animate {
-          animation: letterDrop 0.5s ease-out forwards;
+          animation: letterDrop 0.8s ease-out forwards;
           opacity: 0;
         }
 
-        .particle-animate {
-          animation: particleDisintegrate 1s ease-out forwards;
+        .flip-timer {
+          perspective: 1000px;
+        }
+
+        .flip-card {
+          position: relative;
+          width: 90px;
+          height: 90px;
+          margin: 0 10px;
+          transform-style: preserve-3d;
+          background: linear-gradient(145deg, #8B4513, #A0522D);
+          border: 4px solid #DAA520;
+          border-radius: 12px;
+          box-shadow: 
+            0 6px 12px rgba(0,0,0,0.4),
+            inset 0 3px 6px rgba(255,255,255,0.3);
+        }
+
+        /* Mobile responsive timer */
+        @media screen and (max-width: 640px) {
+          .flip-card {
+            width: 70px;
+            height: 70px;
+            margin: 0 5px;
+            border: 3px solid #DAA520;
+          }
+          
+          .flip-timer {
+            padding: 1rem;
+          }
+        }
+
+        @media screen and (max-width: 480px) {
+          .flip-card {
+            width: 60px;
+            height: 60px;
+            margin: 0 3px;
+            border: 2px solid #DAA520;
+          }
+        }
+
+        .flip-card-inner {
+          position: relative;
+          width: 100%;
+          height: 100%;
+          text-align: center;
+          transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+          transform-style: preserve-3d;
+        }
+
+        .flip-card.animate .flip-card-inner {
+          animation: flipCard 0.6s ease-in-out;
+        }
+
+        .flip-card-front, .flip-card-back {
+          position: absolute;
+          width: 100%;
+          height: 100%;
+          backface-visibility: hidden;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 2.5rem;
+          font-weight: bold;
+          color: #FFD700;
+          text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+          background: linear-gradient(145deg, #8B4513, #A0522D);
+          border-radius: 8px;
+        }
+
+        /* Mobile responsive text sizes */
+        @media screen and (max-width: 640px) {
+          .flip-card-front, .flip-card-back {
+            font-size: 2rem;
+          }
+        }
+
+        @media screen and (max-width: 480px) {
+          .flip-card-front, .flip-card-back {
+            font-size: 1.5rem;
+          }
+        }
+
+        .flip-card-back {
+          transform: rotateY(180deg);
+        }
+
+        .timer-label {
+          color: #DAA520;
+          font-size: 1rem;
+          font-weight: bold;
+          text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+          margin-top: 10px;
+        }
+
+        @media screen and (max-width: 640px) {
+          .timer-label {
+            font-size: 0.875rem;
+            margin-top: 8px;
+          }
         }
 
         .text-shadow-western {
@@ -300,22 +509,68 @@ export default function RecruitmentPage() {
         }
 
         .western-border {
-          border: 2px solid #eab308;
-          border-radius: 8px;
+          border: 3px solid #eab308;
+          border-radius: 12px;
           position: relative;
+          transition: all 0.3s ease;
+        }
+
+        .western-border:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 8px 16px rgba(234, 179, 8, 0.3);
+        }
+
+        /* Disable hover effects on touch devices */
+        @media (hover: none) {
+          .western-border:hover {
+            transform: none;
+            box-shadow: none;
+          }
         }
 
         .western-border::before {
           content: '';
           position: absolute;
-          top: -4px;
-          left: -4px;
-          right: -4px;
-          bottom: -4px;
+          top: -6px;
+          left: -6px;
+          right: -6px;
+          bottom: -6px;
           background: linear-gradient(45deg, #eab308, transparent, #eab308);
-          border-radius: 12px;
+          border-radius: 16px;
           z-index: -1;
-          opacity: 0.3;
+          opacity: 0.4;
+        }
+
+        /* Improved touch targets for mobile */
+        @media screen and (max-width: 768px) {
+          .touch-target {
+            min-height: 44px;
+            min-width: 44px;
+          }
+          
+          button, .clickable {
+            min-height: 44px;
+          }
+        }
+
+        /* Prevent zoom on iOS inputs */
+        @media screen and (-webkit-min-device-pixel-ratio: 0) {
+          select, textarea, input[type="text"], input[type="password"], input[type="datetime"], input[type="datetime-local"], input[type="date"], input[type="month"], input[type="time"], input[type="week"], input[type="number"], input[type="email"], input[type="url"], input[type="search"], input[type="tel"], input[type="color"] {
+            font-size: 16px;
+          }
+        }
+
+        /* Smooth scrolling enhancement for mobile */
+        html {
+          -webkit-overflow-scrolling: touch;
+          scroll-behavior: smooth;
+        }
+
+        /* Better text rendering on mobile */
+        body {
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
+          text-rendering: optimizeLegibility;
         }
       `}</style>
 
@@ -323,336 +578,245 @@ export default function RecruitmentPage() {
         {/* Navigation */}
         <nav
           className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-            isScrolled ? "bg-stone-900/95 backdrop-blur-sm" : "bg-transparent"
+            isScrolled ? "bg-stone-900/95 backdrop-blur-sm shadow-lg" : "bg-transparent"
           }`}
         >
-          <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-            <a href="#home" className="text-2xl font-bold text-primary font-space-grotesk">ACM SIGKDD</a>
-            <div className="space-x-4">
-              <a href="#home" className="text-white hover:text-primary transition-colors">Home</a>
-              <a href="#domains" className="text-white hover:text-primary transition-colors">Domains</a>
-              <a href="#apply-section" onClick={scrollToForm} className="text-white hover:text-primary transition-colors">Apply</a>
+          <div className="container mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
+            <a href="#home" className="text-2xl sm:text-3xl font-bold text-primary font-space-grotesk">ACM SIGKDD</a>
+            <div className="hidden sm:flex space-x-6">
+              <a href="#home" className="text-white hover:text-primary transition-colors font-dm-sans">Home</a>
+              <a href="#domains" className="text-white hover:text-primary transition-colors font-dm-sans">Domains</a>
+              <a href="#apply-section" onClick={scrollToForm} className="text-white hover:text-primary transition-colors font-dm-sans">Apply</a>
             </div>
+            {/* Mobile menu button could go here */}
           </div>
         </nav>
 
-        {        /* Hero Section */}
+        {/* Hero Section */}
         <section
           id="home"
           className="hero-background relative flex items-center justify-center"
         >
-          <div className="text-center text-white">
-            {showAudioPrompt && (
+          <div className="text-center text-white py-20 px-4">
+            {showAudioPrompt && !isMobile && (
               <div className="absolute top-4 right-4 z-50 animate-fade-in-up">
                 <Button
-                  onClick={() => {
-                    setShowAudioPrompt(false)
-                    const audio = new Audio('/sound1.mp3')
-                    audio.loop = true
-                    audio.volume = 0.3
-                    audio.play().catch(error => console.error('Manual audio playback failed:', error))
-                  }}
-                  className="text-sm px-4 py-2 bg-primary/80 hover:bg-primary animate-glow"
+                  onClick={handleAudioEnable}
+                  className="text-sm px-4 sm:px-6 py-2 sm:py-3 bg-primary/90 hover:bg-primary animate-glow rounded-lg touch-target"
                 >
                   Enable Audio
                 </Button>
               </div>
             )}
             
-            {/* RECRUITMENTS animation */}
-            <div className="flex justify-center mb-2 text-4xl md:text-6xl font-bold text-primary font-space-grotesk text-shadow-western">
-              {"RECRUITMENTS".split("").map((char, i) => (
-                <span 
-                  key={i} 
-                  className={`letter-animate ${animationPhase >= 1 ? 'opacity-100' : 'opacity-0'}`}
-                  style={{ 
-                    animationDelay: `${i * 0.1}s`,
-                    opacity: animationPhase >= 1 ? 1 : 0
-                  }}
-                >
-                  {char}
-                </span>
-              ))}
+            {/* RECRUITMENTS and 2025 animation */}
+            <div className="flex flex-col items-center mb-6 sm:mb-8">
+              <div className="flex justify-center text-3xl sm:text-5xl md:text-7xl font-bold text-primary font-space-grotesk text-shadow-western flex-wrap">
+                {"RECRUITMENTS 2025".split("").map((char, i) => (
+                  <span 
+                    key={i} 
+                    className={`letter-animate ${animationPhase >= 1 ? 'letter-glow' : ''}`}
+                    style={{ 
+                      animationDelay: `${i * 0.08}s`,
+                      opacity: animationPhase >= 1 ? 1 : 0
+                    }}
+                  >
+                    {char === " " ? "\u00A0" : char}
+                  </span>
+                ))}
+              </div>
             </div>
 
-            {/* 2024 animation */}
-            <div className={`flex justify-center mb-6 text-4xl md:text-6xl font-bold text-primary font-space-grotesk text-shadow-western transition-opacity duration-500 ${
-              animationPhase >= 2 && animationPhase < 3 ? 'opacity-100' : 'opacity-0'
+            {/* Enhanced Flip Timer */}
+            <div className={`flex justify-center items-center mb-8 sm:mb-12 transition-all duration-1000 ${
+              animationPhase >= 2 ? 'opacity-100 scale-100' : 'opacity-0 scale-90'
             }`}>
-              {"2024".split("").map((char, i) => (
-                <span 
-                  key={i} 
-                  className={`letter-animate ${animationPhase === 3 ? 'particle-animate' : ''}`}
-                  style={{ 
-                    animationDelay: animationPhase >= 2 ? `${i * 0.1}s` : '0s',
-                    '--random-x': `${(Math.random() - 0.5) * 100}px`,
-                    '--random-y': `${(Math.random() - 0.5) * 100}px`
-                  } as React.CSSProperties}
-                >
-                  {char}
-                </span>
-              ))}
+              <div className="flip-timer flex items-center space-x-4 sm:space-x-8 p-4 sm:p-8 bg-gradient-to-br from-amber-900/40 to-yellow-900/40 backdrop-blur-md rounded-2xl border-3 border-yellow-500/40 shadow-xl">
+                {[
+                  { value: timeLeft.days, label: 'DAYS', changed: timeLeft.daysChanged },
+                  { value: timeLeft.hours, label: 'HRS', changed: timeLeft.hoursChanged },
+                  { value: timeLeft.minutes, label: 'MIN', changed: timeLeft.minutesChanged },
+                  { value: timeLeft.seconds, label: 'SEC', changed: timeLeft.secondsChanged },
+                ].map(({ value, label, changed }, index) => (
+                  <div key={label} className="text-center">
+                    <div className={`flip-card ${changed ? 'animate' : ''}`}>
+                      <div className="flip-card-inner">
+                        <div className="flip-card-front">
+                          {String(value).padStart(2, '0')}
+                        </div>
+                        <div className="flip-card-back">
+                          {String(value).padStart(2, '0')}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="timer-label">{label}</div>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            {/* 2025 animation */}
-            <div className={`flex justify-center mb-6 text-4xl md:text-6xl font-bold text-primary font-space-grotesk text-shadow-western transition-opacity duration-500 ${
-              animationPhase >= 3 ? 'opacity-100' : 'opacity-0'
+            <p className={`text-lg sm:text-xl md:text-2xl mb-8 sm:mb-10 font-dm-sans text-shadow-western transition-all duration-1000 px-4 ${
+              animationPhase >= 2 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'
             }`}>
-              {"2025".split("").map((char, i) => (
-                <span 
-                  key={i} 
-                  className="letter-animate"
-                  style={{ 
-                    animationDelay: animationPhase >= 3 ? `${i * 0.1}s` : '0s'
-                  }}
-                >
-                  {char}
-                </span>
-              ))}
-            </div>
-
-            <p className={`text-xl md:text-2xl mb-8 font-dm-sans text-shadow-western transition-all duration-1000 ${
-              animationPhase >= 4 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'
-            }`}>
-              Ride into the Future With Us
+              Saddle Up for Innovation
             </p>
 
             <div className={`transition-all duration-800 ${
-              animationPhase >= 4 ? 'opacity-100 scale-100' : 'opacity-0 scale-90'
+              animationPhase >= 2 ? 'opacity-100 scale-100' : 'opacity-0 scale-90'
             }`}>
               <Button
                 onClick={scrollToForm}
-                className="text-lg px-8 py-4 animate-glow hover:scale-105 transition-transform font-space-grotesk"
+                className="text-base sm:text-lg px-8 sm:px-10 py-4 sm:py-6 animate-glow hover:scale-110 transition-transform font-space-grotesk rounded-lg touch-target"
                 size="lg"
               >
-                Apply Now
+                Join the Posse
               </Button>
             </div>
           </div>
         </section>
 
         {/* Domains Section */}
-        <section id="domains" className="py-20 bg-background">
-          <div className="container mx-auto px-4">
-            <h2 className="text-5xl font-bold text-center mb-16 font-space-grotesk text-primary">Choose Your Path</h2>
+        <section id="domains" className="py-16 sm:py-24 bg-background">
+          <div className="container mx-auto px-4 sm:px-6">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-center mb-12 sm:mb-20 font-space-grotesk text-primary">Choose Your Trail</h2>
 
-            <div className="grid md:grid-cols-2 gap-12">
-              <Card className="western-border hover:shadow-2xl transition-all duration-300 animate-slide-in-left bg-card/90 backdrop-blur-sm">
-                <CardHeader>
-                  <div className="w-full h-48 mb-4 rounded-lg overflow-hidden">
-                    <img
-                      src="/cowboy-at-saloon-table-with-cards-representing-web.png"
-                      alt="Web Development"
-                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                    />
-                  </div>
-                  <CardTitle className="text-2xl font-space-grotesk text-primary">Web App Development</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <CardDescription className="text-lg font-dm-sans">
-                    Build scalable, modern applications for real-world impact. Master the frontier of web technologies.
-                  </CardDescription>
-                  <Badge className="mt-4" variant="secondary">
-                    Frontend & Backend
-                  </Badge>
-                </CardContent>
-              </Card>
-
-              <Card className="western-border hover:shadow-2xl transition-all duration-300 animate-slide-in-left bg-card/90 backdrop-blur-sm">
-                <CardHeader>
-                  <div className="w-full h-48 mb-4 rounded-lg overflow-hidden">
-                    <img
-                      src="/explorer-cowboy-with-map-representing-research-and.png"
-                      alt="Research & Development"
-                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                    />
-                  </div>
-                  <CardTitle className="text-2xl font-space-grotesk text-primary">Research & Development</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <CardDescription className="text-lg font-dm-sans">
-                    Explore new territories in AI, ML, and data science. Pioneer the unknown frontiers of technology.
-                  </CardDescription>
-                  <Badge className="mt-4" variant="secondary">
-                    AI & ML
-                  </Badge>
-                </CardContent>
-              </Card>
-
-              <Card className="western-border hover:shadow-2xl transition-all duration-300 animate-slide-in-left bg-card/90 backdrop-blur-sm">
-                <CardHeader>
-                  <div className="w-full h-48 mb-4 rounded-lg overflow-hidden">
-                    <img
-                      src="/sheriff-badge-representing-corporate-leadership-an.png"
-                      alt="Corporate"
-                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                    />
-                  </div>
-                  <CardTitle className="text-2xl font-space-grotesk text-primary">Corporate</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <CardDescription className="text-lg font-dm-sans">
-                    Lead partnerships, growth, and organizational impact. Become the sheriff of business strategy.
-                  </CardDescription>
-                  <Badge className="mt-4" variant="secondary">
-                    Leadership
-                  </Badge>
-                </CardContent>
-              </Card>
-
-              <Card className="western-border hover:shadow-2xl transition-all duration-300 animate-slide-in-left bg-card/90 backdrop-blur-sm">
-                <CardHeader>
-                  <div className="w-full h-48 mb-4 rounded-lg overflow-hidden">
-                    <img
-                      src="/artist-with-brush-representing-creativity-and-desi.png"
-                      alt="Creatives"
-                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                    />
-                  </div>
-                  <CardTitle className="text-2xl font-space-grotesk text-primary">Creatives</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <CardDescription className="text-lg font-dm-sans">
-                    Bring stories to life with design and media. Paint the narrative of our digital frontier.
-                  </CardDescription>
-                  <Badge className="mt-4" variant="secondary">
-                    Design & Media
-                  </Badge>
-                </CardContent>
-              </Card>
+            <div className="grid sm:grid-cols-2 gap-8 sm:gap-16">
+              {[
+                {
+                  title: "Web App Development",
+                  img: "/cowboy-at-saloon-table-with-cards-representing-web.png",
+                  desc: "Craft robust, cutting-edge web applications that make a real impact.",
+                  badge: "Frontend & Backend"
+                },
+                {
+                  title: "Research & Development",
+                  img: "/explorer-cowboy-with-map-representing-research-and.png",
+                  desc: "Venture into new frontiers of AI, ML, and data science innovation.",
+                  badge: "AI & ML"
+                },
+                {
+                  title: "Corporate",
+                  img: "/sheriff-badge-representing-corporate-leadership-an.png",
+                  desc: "Lead strategic partnerships and drive organizational growth.",
+                  badge: "Leadership"
+                },
+                {
+                  title: "Creatives",
+                  img: "/artist-with-brush-representing-creativity-and-desi.png",
+                  desc: "Shape compelling narratives through design and media.",
+                  badge: "Design & Media"
+                },
+              ].map((domain, index) => (
+                <Card key={index} className="western-border hover:shadow-2xl transition-all duration-300 animate-slide-in-left bg-card/95 backdrop-blur-md">
+                  <CardHeader>
+                    <div className="w-full h-48 sm:h-56 mb-6 rounded-xl overflow-hidden">
+                      <img
+                        src={domain.img}
+                        alt={domain.title}
+                        className="w-full h-full object-cover hover:scale-110 transition-transform duration-500"
+                        loading="lazy"
+                      />
+                    </div>
+                    <CardTitle className="text-2xl sm:text-3xl font-space-grotesk text-primary">{domain.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <CardDescription className="text-base sm:text-lg font-dm-sans">{domain.desc}</CardDescription>
+                    <Badge className="mt-4 sm:mt-6 text-sm" variant="secondary">{domain.badge}</Badge>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           </div>
         </section>
 
         {/* Apply Section */}
         {showForm && (
-          <section id="apply-section" className="py-20 bg-muted/50">
-            <div className="container mx-auto px-4 max-w-2xl">
-              <Card className="western-border bg-card/95 backdrop-blur-sm animate-fade-in-up">
+          <section id="apply-section" className="py-16 sm:py-24 bg-muted/50">
+            <div className="container mx-auto px-4 sm:px-6 max-w-3xl">
+              <Card className="western-border bg-card/95 backdrop-blur-md animate-fade-in-up">
                 {showConfirmation ? (
-                  <CardHeader className="text-center">
-                    <CardTitle className="text-4xl font-space-grotesk text-primary mb-4">
-                      🎉 Thank You for Applying!
+                  <CardHeader className="text-center py-8 sm:py-12">
+                    <CardTitle className="text-3xl sm:text-4xl lg:text-5xl font-space-grotesk text-primary mb-4 sm:mb-6">
+                      🎉 Application Received!
                     </CardTitle>
-                    <CardDescription className="text-lg font-dm-sans mb-6">
-                      We've received your application. Our team will review it and get back to you soon.
+                    <CardDescription className="text-lg sm:text-xl font-dm-sans mb-6 sm:mb-8">
+                      Your application is in. We'll be in touch soon, partner!
                     </CardDescription>
-                    <Button
-                      onClick={resetForm}
-                      className="text-lg px-8 py-4 font-space-grotesk"
-                    >
-                      Submit Another Application
-                    </Button>
                   </CardHeader>
                 ) : showError ? (
-                  <CardHeader className="text-center">
-                    <CardTitle className="text-4xl font-space-grotesk text-red-600 mb-4">
-                      ⚠️ Error Occurred
+                  <CardHeader className="text-center py-8 sm:py-12">
+                    <CardTitle className="text-3xl sm:text-4xl lg:text-5xl font-space-grotesk text-red-600 mb-4 sm:mb-6">
+                      ⚠️ Something Went Wrong
                     </CardTitle>
-                    <CardDescription className="text-lg font-dm-sans mb-6">
-                      Error occurred. Please try again later.
+                    <CardDescription className="text-lg sm:text-xl font-dm-sans mb-6 sm:mb-8">
+                      There was an error submitting your application. Please try again.
                     </CardDescription>
                     <Button
                       onClick={() => setShowError(false)}
-                      className="text-lg px-8 py-4 font-space-grotesk"
+                      className="text-base sm:text-lg px-8 sm:px-10 py-4 sm:py-6 font-space-grotesk rounded-lg touch-target"
                     >
                       Try Again
                     </Button>
                   </CardHeader>
                 ) : (
                   <>
-                    <CardHeader className="text-center">
-                      <CardTitle className="text-4xl font-space-grotesk text-primary mb-4">
-                        Join the Ride – Apply Now
+                    <CardHeader className="text-center py-8 sm:py-12">
+                      <CardTitle className="text-3xl sm:text-4xl lg:text-5xl font-space-grotesk text-primary mb-4 sm:mb-6">
+                        Join the ACM SIGKDD Posse
                       </CardTitle>
-                      <CardDescription className="text-lg font-dm-sans">
-                        Ready to embark on your journey with ACM SIGKDD? Fill out the form below, partner.
+                      <CardDescription className="text-lg sm:text-xl font-dm-sans">
+                        Ready to ride with us? Fill out the form below to apply.
                       </CardDescription>
                     </CardHeader>
-                    <CardContent>
-                      <form onSubmit={handleSubmit} className="space-y-6">
+                    <CardContent className="px-4 sm:px-6">
+                      <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
+                        {[
+                          { id: "name", label: "Full Name", type: "text" },
+                          { id: "registration_number", label: "Registration Number", type: "text" },
+                          { id: "srm_email", label: "SRM Email ID", type: "email" },
+                          { id: "personal_email", label: "Personal Email ID", type: "email" },
+                          { id: "contact_number", label: "Contact Number", type: "tel" },
+                          { id: "section", label: "Section", type: "text" },
+                          { id: "faculty_advisor_name", label: "Faculty Advisor Name", type: "text" },
+                          { id: "faculty_advisor_contact", label: "Faculty Advisor Contact", type: "tel" },
+                        ].map(field => (
+                          <div key={field.id}>
+                            <Label htmlFor={field.id} className="font-dm-sans text-base sm:text-lg">{field.label}</Label>
+                            <Input
+                              id={field.id}
+                              type={field.type}
+                              value={formData[field.id as keyof typeof formData]}
+                              onChange={(e) => setFormData({ ...formData, [field.id]: e.target.value })}
+                              required
+                              disabled={isSubmitting}
+                              className="mt-2 rounded-lg border-yellow-500/30 focus:border-yellow-500 text-base touch-target"
+                            />
+                          </div>
+                        ))}
                         <div>
-                          <Label htmlFor="name" className="font-dm-sans">Full Name</Label>
-                          <Input
-                            id="name"
-                            value={formData.name}
-                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                            required
-                            disabled={isSubmitting}
-                            className="mt-2"
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="registration_number" className="font-dm-sans">Registration Number</Label>
-                          <Input
-                            id="registration_number"
-                            value={formData.registration_number}
-                            onChange={(e) => setFormData({ ...formData, registration_number: e.target.value })}
-                            required
-                            disabled={isSubmitting}
-                            className="mt-2"
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="srm_email" className="font-dm-sans">SRM Email ID</Label>
-                          <Input
-                            id="srm_email"
-                            type="email"
-                            value={formData.srm_email}
-                            onChange={(e) => setFormData({ ...formData, srm_email: e.target.value })}
-                            required
-                            disabled={isSubmitting}
-                            className="mt-2"
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="personal_email" className="font-dm-sans">Personal Email ID</Label>
-                          <Input
-                            id="personal_email"
-                            type="email"
-                            value={formData.personal_email}
-                            onChange={(e) => setFormData({ ...formData, personal_email: e.target.value })}
-                            required
-                            disabled={isSubmitting}
-                            className="mt-2"
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="contact_number" className="font-dm-sans">Contact Number</Label>
-                          <Input
-                            id="contact_number"
-                            value={formData.contact_number}
-                            onChange={(e) => setFormData({ ...formData, contact_number: e.target.value })}
-                            required
-                            disabled={isSubmitting}
-                            className="mt-2"
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="year" className="font-dm-sans">Year</Label>
+                          <Label htmlFor="year" className="font-dm-sans text-base sm:text-lg">Year</Label>
                           <Select 
                             onValueChange={(value) => setFormData({ ...formData, year: value })}
                             value={formData.year}
                             disabled={isSubmitting}
                           >
-                            <SelectTrigger className="mt-2">
+                            <SelectTrigger className="mt-2 rounded-lg border-yellow-500/30 text-base touch-target">
                               <SelectValue placeholder="Select Year" />
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="I">I</SelectItem>
                               <SelectItem value="II">II</SelectItem>
-                              <SelectItem value="III">III</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
                         <div>
-                          <Label htmlFor="department" className="font-dm-sans">Department</Label>
+                          <Label htmlFor="department" className="font-dm-sans text-base sm:text-lg">Department</Label>
                           <Select 
                             onValueChange={(value) => setFormData({ ...formData, department: value })}
                             value={formData.department}
                             disabled={isSubmitting}
                           >
-                            <SelectTrigger className="mt-2">
+                            <SelectTrigger className="mt-2 rounded-lg border-yellow-500/30 text-base touch-target">
                               <SelectValue placeholder="Select Department" />
                             </SelectTrigger>
                             <SelectContent>
@@ -665,46 +829,13 @@ export default function RecruitmentPage() {
                           </Select>
                         </div>
                         <div>
-                          <Label htmlFor="section" className="font-dm-sans">Section</Label>
-                          <Input
-                            id="section"
-                            value={formData.section}
-                            onChange={(e) => setFormData({ ...formData, section: e.target.value })}
-                            required
-                            disabled={isSubmitting}
-                            className="mt-2"
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="faculty_advisor_name" className="font-dm-sans">Faculty Advisor Name</Label>
-                          <Input
-                            id="faculty_advisor_name"
-                            value={formData.faculty_advisor_name}
-                            onChange={(e) => setFormData({ ...formData, faculty_advisor_name: e.target.value })}
-                            required
-                            disabled={isSubmitting}
-                            className="mt-2"
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="faculty_advisor_contact" className="font-dm-sans">Faculty Advisor Contact</Label>
-                          <Input
-                            id="faculty_advisor_contact"
-                            value={formData.faculty_advisor_contact}
-                            onChange={(e) => setFormData({ ...formData, faculty_advisor_contact: e.target.value })}
-                            required
-                            disabled={isSubmitting}
-                            className="mt-2"
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="interested_domain" className="font-dm-sans">Interested Domain</Label>
+                          <Label htmlFor="interested_domain" className="font-dm-sans text-base sm:text-lg">Interested Domain</Label>
                           <Select 
                             onValueChange={(value) => setFormData({ ...formData, interested_domain: value })}
                             value={formData.interested_domain}
                             disabled={isSubmitting}
                           >
-                            <SelectTrigger className="mt-2">
+                            <SelectTrigger className="mt-2 rounded-lg border-yellow-500/30 text-base touch-target">
                               <SelectValue placeholder="Choose your path" />
                             </SelectTrigger>
                             <SelectContent>
@@ -717,7 +848,7 @@ export default function RecruitmentPage() {
                         </div>
                         <Button 
                           type="submit" 
-                          className="w-full text-lg py-6 font-space-grotesk animate-glow"
+                          className="w-full text-base sm:text-lg py-4 sm:py-6 font-space-grotesk animate-glow rounded-lg hover:scale-105 transition-transform touch-target"
                           disabled={isSubmitting}
                         >
                           {isSubmitting ? "Submitting..." : "Submit Application"}
@@ -732,20 +863,28 @@ export default function RecruitmentPage() {
         )}
 
         {/* Footer */}
-        <footer className="bg-stone-900 text-white py-12">
-          <div className="container mx-auto px-4 text-center">
-            <div className="mb-8">
-              <h3 className="text-3xl font-bold mb-4 font-space-grotesk text-primary">ACM SIGKDD</h3>
-              <p className="font-dm-sans text-stone-300">Exploring the frontiers of knowledge and data</p>
+        <footer className="bg-stone-900 text-white py-12 sm:py-16">
+          <div className="container mx-auto px-4 sm:px-6">
+            <div className="grid sm:grid-cols-3 gap-8 sm:gap-12 text-center">
+              <div>
+                <h3 className="text-2xl sm:text-3xl font-bold mb-4 font-space-grotesk text-primary">ACM SIGKDD</h3>
+                <p className="font-dm-sans text-stone-300">Pioneering the future of knowledge and data</p>
+              </div>
+              <div>
+                <h4 className="text-lg sm:text-xl font-bold mb-4 font-space-grotesk text-primary">Contact Us</h4>
+                <p className="font-dm-sans text-stone-300">Saakshi: 9735844700</p>
+                <p className="font-dm-sans text-stone-300">Aditya: 9140804752</p>
+              </div>
+              <div>
+                <h4 className="text-lg sm:text-xl font-bold mb-4 font-space-grotesk text-primary">Follow Us</h4>
+                <div className="flex justify-center space-x-6">
+                  <a href="https://www.linkedin.com/company/srmsigkdd/" className="hover:text-primary transition-colors font-dm-sans touch-target">LinkedIn</a>
+                  <a href="https://www.instagram.com/srm_acm_sigkdd?igsh=dmtiOWQ4M216dHcwhttps://www.instagram.com/srm_acm_sigkdd?igsh=dmtiOWQ4M216dHcw" className="hover:text-primary transition-colors font-dm-sans touch-target">Instagram</a>
+                </div>
+              </div>
             </div>
-            <div className="flex justify-center space-x-8 mb-8">
-              <a href="#" className="hover:text-primary transition-colors">Twitter</a>
-              <a href="#" className="hover:text-primary transition-colors">LinkedIn</a>
-              <a href="#" className="hover:text-primary transition-colors">GitHub</a>
-              <a href="#" className="hover:text-primary transition-colors">Instagram</a>
-            </div>
-            <div className="border-t border-stone-700 pt-8">
-              <p className="font-dm-sans text-stone-400">© 2025 ACM SIGKDD. All rights reserved. Ride responsibly.</p>
+            <div className="border-t border-stone-700 pt-6 sm:pt-8 mt-8 sm:mt-12">
+              <p className="font-dm-sans text-stone-400 text-center text-sm sm:text-base">© 2025 ACM SIGKDD. All rights reserved. Ride responsibly.</p>
             </div>
           </div>
         </footer>
