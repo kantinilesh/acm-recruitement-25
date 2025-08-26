@@ -67,36 +67,47 @@ export default function RecruitmentPage() {
     audio.loop = true
     audio.volume = 0.3
     audio.muted = true // Start muted to allow auto-play
+    
+    // Try to play immediately
     const playAttempt = audio.play().catch(error => {
       console.error('Initial audio playback failed:', error)
-      setShowAudioPrompt(true) // Show prompt if auto-play fails
     })
+
+    const handleScroll = () => {
+      if (audio.muted && window.scrollY > 10) {
+        audio.muted = false
+        audio.play().catch(error => {
+          console.error('Audio playback failed on scroll:', error)
+          setShowAudioPrompt(true)
+        })
+        window.removeEventListener('scroll', handleScroll)
+      }
+    }
 
     const handleInteraction = () => {
       if (audio.muted) {
         audio.muted = false
         audio.play().catch(error => {
           console.error('Audio playback failed after interaction:', error)
-          setShowAudioPrompt(true) // Show prompt if unmute fails
+          setShowAudioPrompt(true)
         })
       }
       window.removeEventListener('click', handleInteraction)
       window.removeEventListener('touchstart', handleInteraction)
-      window.removeEventListener('scroll', handleInteraction)
       window.removeEventListener('mousemove', handleInteraction)
     }
 
+    window.addEventListener('scroll', handleScroll)
     window.addEventListener('click', handleInteraction)
     window.addEventListener('touchstart', handleInteraction)
-    window.addEventListener('scroll', handleInteraction)
     window.addEventListener('mousemove', handleInteraction)
 
     return () => {
       audio.pause()
       audio.currentTime = 0
+      window.removeEventListener('scroll', handleScroll)
       window.removeEventListener('click', handleInteraction)
       window.removeEventListener('touchstart', handleInteraction)
-      window.removeEventListener('scroll', handleInteraction)
       window.removeEventListener('mousemove', handleInteraction)
     }
   }, [])
@@ -238,6 +249,35 @@ export default function RecruitmentPage() {
           animation: glow 2s ease-in-out infinite;
         }
 
+        /* iOS Background Fix */
+        .hero-background {
+          background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('/red-dead-redemption-7680x4320.jpg');
+          background-size: cover;
+          background-position: center center;
+          background-repeat: no-repeat;
+          min-height: 100vh;
+          min-height: 100svh;
+        }
+
+        /* Fix iOS viewport issues */
+        @supports (-webkit-touch-callout: none) {
+          .hero-background {
+            background-attachment: scroll !important;
+            background-size: cover;
+            background-position: center;
+            min-height: -webkit-fill-available;
+          }
+        }
+
+        /* Alternative iOS fix */
+        @media screen and (-webkit-min-device-pixel-ratio: 2) {
+          .hero-background {
+            background-attachment: scroll;
+            background-size: cover;
+            background-position: center;
+          }
+        }
+
         .animate-fade-in-up {
           animation: fadeInUp 0.8s ease-out;
         }
@@ -296,20 +336,10 @@ export default function RecruitmentPage() {
           </div>
         </nav>
 
-        {/* Hero Section */}
+        {        /* Hero Section */}
         <section
           id="home"
-          className="relative min-h-[100svh] flex items-center justify-center"
-          style={{
-            backgroundImage: `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('/red-dead-redemption-7680x4320.jpg')`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            backgroundRepeat: "no-repeat",
-            backgroundAttachment: "fixed",
-            WebkitBackgroundSize: "cover",
-            MozBackgroundSize: "cover",
-            OBackgroundSize: "cover",
-          }}
+          className="hero-background relative flex items-center justify-center"
         >
           <div className="text-center text-white">
             {showAudioPrompt && (
